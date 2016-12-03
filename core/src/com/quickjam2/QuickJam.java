@@ -5,6 +5,7 @@ import java.util.HashMap;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
@@ -36,9 +37,9 @@ public class QuickJam extends ApplicationAdapter implements InputProcessor {
 
 		Texture playerImg = new Texture("player.png");
 		player = new PlayerController(playerImg);
-		player.scale(2);
-		player.setPosition(player.getWidth(), player.getHeight());
-		
+		player.setSize(48, 48);
+		player.setPosition(player.getWidth()+20, player.getHeight()+20);
+
 		obstacle = new Texture("obstacle.png");
 
 		time.put(1, new Sprite(new Texture("one.png")));
@@ -62,11 +63,18 @@ public class QuickJam extends ApplicationAdapter implements InputProcessor {
 	}
 
 	public void reset() {
+		player.setPosition(player.getWidth()+20, player.getHeight()+20);
+		if (!player.gravityDown()) {
+			player.flipGravity();
+		}
+		
 		timeToObstacle = 1 / obstaclesPerSecond;
 		currentObstacleTime = -3;
 
 		timeToGravity = 4;
 		currentGravityTime = -3;
+
+		obstacles = new ArrayList<VectorizedSprite>();
 	}
 
 	@Override
@@ -78,13 +86,13 @@ public class QuickJam extends ApplicationAdapter implements InputProcessor {
 
 		currentObstacleTime += dt;
 		currentGravityTime += dt;
-		
+
 		System.out.println(currentObstacleTime);
 
 		if (currentObstacleTime > timeToObstacle) {
 			VectorizedSprite vs = new VectorizedSprite(obstacle);
-			vs.scale(3);
-			vs.setPosition(775, (float) (Math.random()*768));
+			vs.setSize(24, 24);
+			vs.setPosition(775, (float) (Math.random() * 768));
 			vs.setMovementVector(new Vector2(-200, 0));
 			obstacles.add(vs);
 			currentObstacleTime -= timeToObstacle;
@@ -95,6 +103,8 @@ public class QuickJam extends ApplicationAdapter implements InputProcessor {
 			player.flipGravity();
 			currentGravityTime -= timeToGravity;
 		}
+		
+		player.update(dt);
 
 		ArrayList<VectorizedSprite> toRemove = new ArrayList<VectorizedSprite>();
 
@@ -104,7 +114,7 @@ public class QuickJam extends ApplicationAdapter implements InputProcessor {
 				toRemove.add(vs);
 			}
 			if (Intersector.overlaps(player.getBoundingRectangle(), vs.getBoundingRectangle())) {
-				//reset();
+				reset();
 			}
 		}
 
@@ -141,7 +151,13 @@ public class QuickJam extends ApplicationAdapter implements InputProcessor {
 
 	@Override
 	public boolean keyDown(int keycode) {
-		// TODO Auto-generated method stub
+		if (keycode == Input.Keys.LEFT) {
+			player.getMovement().set(new Vector2(-100, player.movement.y));
+		} else if (keycode == Input.Keys.RIGHT) {
+			player.getMovement().set(new Vector2(100, player.movement.y));
+		} else if (keycode == Input.Keys.UP) {
+			player.jump();
+		}
 		return false;
 	}
 
