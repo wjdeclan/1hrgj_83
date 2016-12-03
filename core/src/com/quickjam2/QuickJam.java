@@ -11,16 +11,17 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Intersector;
+import com.badlogic.gdx.math.Vector2;
 
 public class QuickJam extends ApplicationAdapter implements InputProcessor {
 	SpriteBatch batch;
 	PlayerController player;
-	
+
 	Texture obstacle;
 
 	HashMap<Integer, Sprite> time = new HashMap<Integer, Sprite>();
 
-	float obstaclesPerSecond = 3;
+	float obstaclesPerSecond = 2;
 	float timeToObstacle;
 	float currentObstacleTime;
 
@@ -35,6 +36,8 @@ public class QuickJam extends ApplicationAdapter implements InputProcessor {
 
 		Texture img = new Texture("badlogic.jpg");
 		player = new PlayerController(img);
+		
+		obstacle = new Texture("obstacle.png");
 
 		time.put(1, new Sprite(new Texture("one.png")));
 		time.put(2, new Sprite(new Texture("two.png")));
@@ -50,12 +53,12 @@ public class QuickJam extends ApplicationAdapter implements InputProcessor {
 		timeToObstacle = 1 / obstaclesPerSecond;
 		currentObstacleTime = -3;
 
-		timeToGravity = 4;
+		timeToGravity = 5;
 		currentGravityTime = -3;
 
 		Gdx.input.setInputProcessor(this);
 	}
-	
+
 	public void reset() {
 		timeToObstacle = 1 / obstaclesPerSecond;
 		currentObstacleTime = -3;
@@ -73,25 +76,33 @@ public class QuickJam extends ApplicationAdapter implements InputProcessor {
 
 		currentObstacleTime += dt;
 		currentGravityTime += dt;
+		
+		System.out.println(currentObstacleTime);
 
 		if (currentObstacleTime > timeToObstacle) {
-			obstacles.add(new VectorizedSprite(obstacle));
+			VectorizedSprite vs = new VectorizedSprite(obstacle);
+			vs.scale(3);
+			vs.setPosition(775, (float) (Math.random()*768));
+			vs.setMovementVector(new Vector2(-200, 0));
+			obstacles.add(vs);
 			currentObstacleTime -= timeToObstacle;
 		}
-		
+
 		if (currentGravityTime > timeToGravity) {
 			player.flip(false, true);
 			player.flipGravity();
+			currentGravityTime -= timeToGravity;
 		}
 
 		ArrayList<VectorizedSprite> toRemove = new ArrayList<VectorizedSprite>();
 
 		for (VectorizedSprite vs : obstacles) {
-			if (vs.getX() > 775) {
+			vs.update(dt);
+			if (vs.getX() < 0) {
 				toRemove.add(vs);
 			}
 			if (Intersector.overlaps(player.getBoundingRectangle(), vs.getBoundingRectangle())) {
-				reset();
+				//reset();
 			}
 		}
 
@@ -100,13 +111,13 @@ public class QuickJam extends ApplicationAdapter implements InputProcessor {
 		}
 
 		batch.begin();
-		
+
 		for (VectorizedSprite vs : obstacles) {
 			vs.draw(batch);
 		}
 
 		player.draw(batch);
-		
+
 		if ((currentGravityTime > timeToGravity - 3 && currentGravityTime < timeToGravity - 2.5)
 				|| (currentGravityTime > -3 && currentGravityTime < -2.5)) {
 			time.get(3).draw(batch);
