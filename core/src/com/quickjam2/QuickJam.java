@@ -34,8 +34,10 @@ public class QuickJam extends ApplicationAdapter implements InputProcessor {
 	public void create() {
 		batch = new SpriteBatch();
 
-		Texture playerImg = new Texture("player.jpg");
+		Texture playerImg = new Texture("player.png");
 		player = new PlayerController(playerImg);
+		player.scale(2);
+		player.setPosition(player.getWidth(), player.getHeight());
 		
 		obstacle = new Texture("obstacle.png");
 
